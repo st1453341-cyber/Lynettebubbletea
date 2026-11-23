@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蜜雪冰城風味珍珠奶茶點餐與購物車 ⛄🧋</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #fff5f5 0%, #fff8e1 50%, #ffebee 100%);
+      min-height: 100vh;
+    }
+    .menu-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(230, 0, 18, 0.14);
+    }
+    .drink-img {
+      transition: transform 0.35s ease;
+    }
+    .menu-card:hover .drink-img {
+      transform: scale(1.06);
+    }
+    @keyframes pop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: pop 0.22s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="pb-12 text-[#3d231d]">
+
+  <!-- 頂部品牌導覽列 -->
+  <header class="bg-gradient-to-r from-[#e60012] via-[#f42b3b] to-[#ff5252] text-white sticky top-0 z-30 shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-white text-[#e60012] flex items-center justify-center text-2xl shadow-md shrink-0">
+          ⛄
+        </div>
+        <div>
+          <h1 class="font-black text-lg sm:text-xl tracking-wide leading-tight">MIXUE 蜜雪甜蜜點餐</h1>
+          <p class="text-[11px] sm:text-xs text-red-100">新鮮冰淇淋與茶飲・外帶自取 / 外賣直送</p>
+        </div>
+      </div>
+
+      <!-- 手機版快速跳轉購物車按鈕 -->
+      <button 
+        onclick="scrollToCart()" 
+        class="lg:hidden bg-white text-[#e60012] font-bold px-3.5 py-2 rounded-full shadow-md flex items-center gap-1.5 text-sm active:scale-95 transition cursor-pointer"
+      >
+        <span>🛒 購物車</span>
+        <span id="mobile-cart-badge" class="bg-[#e60012] text-white text-xs px-2 py-0.5 rounded-full">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 取餐與外賣配送地點選擇列 (Take-Out & Delivery Location Selector) -->
+  <section class="max-w-6xl mx-auto px-4 pt-4">
+    <div class="bg-white rounded-[22px] p-3.5 sm:px-5 sm:py-4 border-2 border-[#ffcdd2] shadow-xs space-y-3">
+      
+      <!-- 模式切換：門市外帶自取 vs 外賣送貨上門 -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-dashed border-[#ffe0e3]">
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            id="mode-takeout-btn" 
+            onclick="switchOrderMode('takeout')" 
+            class="px-3.5 py-1.5 rounded-full bg-[#e60012] text-white font-bold text-xs sm:text-sm shadow-xs transition cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🛍️ 門市外帶自取</span>
+          </button>
+          <button 
+            type="button" 
+            id="mode-delivery-btn" 
+            onclick="switchOrderMode('delivery')" 
+            class="px-3.5 py-1.5 rounded-full bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffebee] border border-[#ffcdd2] font-bold text-xs sm:text-sm transition cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🛵 外賣送貨上門 (Delivery)</span>
+          </button>
+        </div>
+        <span id="order-mode-eta" class="bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold px-2.5 py-1 rounded-full">
+          ● 營業中・約 5-10 分鐘可取
+        </span>
+      </div>
+
+      <!-- 1. 外帶自取門市選擇面板 -->
+      <div id="takeout-location-panel" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#ffebee] text-[#e60012] flex items-center justify-center text-xl shrink-0">
+            🏪
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-[#e60012] bg-[#ffebee] px-2 py-0.5 rounded-md">外帶自取門市 Take-Out Location</span>
+            <p id="store-address-display" class="text-xs text-[#5d4037] mt-1 font-medium">澳門板樟堂街 / 議事亭前地（大三巴步行街入口旁・外帶取餐櫃檯 1 號窗）</p>
+          </div>
+        </div>
+
+        <div class="w-full sm:w-auto">
+          <select 
+            id="pickup-location-select" 
+            onchange="updatePickupLocation()" 
+            class="w-full sm:w-auto bg-[#fff5f5] hover:bg-[#ffebee] border-2 border-[#ffcdd2] focus:border-[#e60012] text-[#3d231d] font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl outline-none cursor-pointer transition"
+          >
+            <option value="senado">🇲🇴 澳門議事亭前地店 (Senado Square)</option>
+            <option value="campo">🇲🇴 澳門水坑尾旗艦店 (Rua do Campo)</option>
+            <option value="taipa">🇲🇴 氹仔官也街店 (Rua do Cunha, Taipa)</option>
+            <option value="cotai">🇲🇴 路氹威尼斯人店 (The Venetian Macao)</option>
+            <option value="border">🇲🇴 澳門關閘廣場店 (Border Gate Plaza)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. 外賣送貨地址輸入面板（預設隱藏） -->
+      <div id="delivery-location-panel" class="hidden flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#fff3e0] text-[#d84315] flex items-center justify-center text-xl shrink-0">
+            🛵
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[11px] font-bold text-[#d84315] bg-[#fff3e0] px-2 py-0.5 rounded-md">外賣配送地址 Delivery Location</span>
+              <span class="text-[11px] font-bold text-[#2e7d32]">🎁 滿 $15.00 免運費</span>
+            </div>
+            <p id="delivery-fee-hint" class="text-xs text-[#5d4037] mt-1 font-medium">請選擇配送區域並填寫大廈／街道門牌（目前運費：$2.00）</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:max-w-xl">
+          <select 
+            id="delivery-zone-select" 
+            onchange="updateDeliveryLocation()" 
+            class="bg-[#fff8e1] border-2 border-[#ffcc80] focus:border-[#e60012] text-[#3d231d] font-bold text-xs sm:text-sm px-3 py-2 rounded-xl outline-none cursor-pointer"
+          >
+            <option value="peninsula" data-fee="2.00" data-eta="25-35 分鐘送達">🇲🇴 澳門半島區 (+$2.00)</option>
+            <option value="taipa" data-fee="2.50" data-eta="30-40 分鐘送達">🇲🇴 氹仔市區 / 官也街 (+$2.50)</option>
+            <option value="cotai" data-fee="3.00" data-eta="35-45 分鐘送達">🇲🇴 路氹金光大道酒店區 (+$3.00)</option>
+            <option value="coloane" data-fee="4.00" data-eta="40-50 分鐘送達">🇲🇴 路環市區 / 石排灣 (+$4.00)</option>
+          </select>
+
+          <input 
+            type="text" 
+            id="delivery-address-input" 
+            oninput="updateDeliveryLocation()" 
+            placeholder="輸入外賣詳細地址（例：新馬路120號XX大廈5樓B）..." 
+            class="flex-1 bg-white border-2 border-[#ffcc80] focus:border-[#e60012] text-[#3d231d] placeholder-[#bcaaa4] text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl outline-none"
+          >
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- VIP 會員手機登入與專屬禮遇橫幅 -->
+  <section class="max-w-6xl mx-auto px-4 pt-5">
+    <div class="bg-gradient-to-r from-[#fff8e1] via-[#fffdf7] to-[#ffebee] rounded-[24px] p-4 sm:p-5 border-4 border-[#ffd54f] shadow-md">
+      
+      <!-- 未登入狀態：手機號碼登入/註冊表單（支援簡訊驗證碼或密碼） -->
+      <div id="vip-guest-view" class="flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3 text-center lg:text-left">
+          <div class="w-12 h-12 rounded-2xl bg-[#ffd54f] text-[#b71c1c] flex items-center justify-center text-2xl shadow-xs shrink-0">
+            👑
+          </div>
+          <div>
+            <h2 class="font-bold text-base sm:text-lg text-[#d84315] flex items-center justify-center lg:justify-start gap-2">
+              雪王 VIP 會員俱樂部
+              <span class="text-xs bg-[#e60012] text-white px-2.5 py-0.5 rounded-full animate-pulse">享全單 9 折</span>
+            </h2>
+            <p class="text-xs text-[#795548] mt-0.5">輸入手機號碼搭配 <strong class="text-[#e60012]">簡訊驗證碼</strong> 或 <strong class="text-[#e60012]">會員密碼</strong> 登入，立即享 9 折與積分！</p>
+          </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-col gap-2">
+          <!-- 登入模式切換標籤 -->
+          <div class="flex items-center justify-center lg:justify-end gap-2 text-xs font-bold">
+            <button 
+              type="button" 
+              id="tab-auth-sms" 
+              onclick="switchVipAuthMode('sms')" 
+              class="px-3 py-1 rounded-full bg-[#e60012] text-white shadow-xs transition cursor-pointer"
+            >
+              📱 簡訊驗證碼登入
+            </button>
+            <button 
+              type="button" 
+              id="tab-auth-pwd" 
+              onclick="switchVipAuthMode('password')" 
+              class="px-3 py-1 rounded-full bg-white text-[#795548] border border-[#ffcc80] hover:bg-[#fff3e0] transition cursor-pointer"
+            >
+              🔑 密碼登入
+            </button>
+          </div>
+
+          <!-- 手機號碼 + 驗證碼/密碼輸入列 -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <!-- 手機號碼框 -->
+            <div class="flex items-center bg-white border-2 border-[#ffcc80] focus-within:border-[#e60012] rounded-2xl overflow-hidden shadow-xs">
+              <select id="vip-country-code" class="bg-[#fff8e1] text-[#5d4037] font-bold text-xs sm:text-sm px-2.5 py-2 outline-none border-r border-[#ffe0b2] cursor-pointer">
+                <option value="+853">🇲🇴 +853</option>
+                <option value="+852">🇭🇰 +852</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+886">🇹🇼 +886</option>
+              </select>
+              <input 
+                type="tel" 
+                id="vip-phone-input" 
+                placeholder="手機號碼..." 
+                maxlength="11"
+                class="px-3 py-2 text-sm font-bold text-[#3d231d] placeholder-[#bcaaa4] outline-none w-full sm:w-32"
+              >
+            </div>
+
+            <!-- 簡訊驗證碼輸入區 -->
+            <div id="auth-sms-box" class="flex items-center bg-white border-2 border-[#ffcc80] focus-within:border-[#e60012] rounded-2xl overflow-hidden shadow-xs">
+              <input 
+                type="text" 
+                id="vip-sms-input" 
+                placeholder="6位驗證碼" 
+                maxlength="6"
+                onkeydown="if(event.key==='Enter') loginVip()"
+                class="px-3 py-2 text-sm font-bold text-[#3d231d] placeholder-[#bcaaa4] outline-none w-24 sm:w-28 tracking-widest"
+              >
+              <button 
+                type="button" 
+                id="send-sms-btn" 
+                onclick="sendSmsCode()" 
+                class="bg-[#fff3e0] hover:bg-[#ffe0b2] disabled:opacity-50 disabled:cursor-not-allowed text-[#d84315] font-bold text-xs px-2.5 py-2 border-l border-[#ffe0b2] whitespace-nowrap transition cursor-pointer"
+              >
+                獲取驗證碼
+              </button>
+            </div>
+
+            <!-- 密碼輸入區（預設隱藏） -->
+            <div id="auth-pwd-box" class="hidden items-center bg-white border-2 border-[#ffcc80] focus-within:border-[#e60012] rounded-2xl overflow-hidden shadow-xs">
+              <input 
+                type="password" 
+                id="vip-pwd-input" 
+                placeholder="輸入會員密碼..." 
+                maxlength="20"
+                onkeydown="if(event.key==='Enter') loginVip()"
+                class="px-3 py-2 text-sm font-bold text-[#3d231d] placeholder-[#bcaaa4] outline-none w-full sm:w-40"
+              >
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button 
+                type="button" 
+                onclick="loginVip()" 
+                class="flex-1 sm:flex-none bg-[#e60012] hover:bg-[#cc0010] text-white font-bold text-sm px-4 py-2 rounded-2xl shadow-sm active:scale-95 transition cursor-pointer whitespace-nowrap"
+              >
+                ✨ 登入
+              </button>
+              <button 
+                type="button" 
+                onclick="fillDemoVip()" 
+                class="bg-[#ffd54f] hover:bg-[#ffca28] text-[#5d4037] font-bold text-xs px-3 py-2 rounded-2xl shadow-xs active:scale-95 transition cursor-pointer whitespace-nowrap"
+                title="自動填入示範帳號並驗證登入"
+              >
+                ⚡ 一鍵體驗
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 已登入狀態：VIP 會員資訊卡片 -->
+      <div id="vip-member-view" class="hidden flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#ffd54f] to-[#ff9800] text-white flex items-center justify-center text-2xl shadow-sm shrink-0">
+            👑
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="vip-tier-badge" class="bg-[#e60012] text-white text-xs font-bold px-2.5 py-0.5 rounded-full">黃金雪王 VIP</span>
+              <span id="vip-display-phone" class="font-bold text-base text-[#3d231d]">+853 6688 9900</span>
+              <span class="bg-[#e8f5e9] text-[#2e7d32] border border-[#a5d6a7] text-xs font-bold px-2 py-0.5 rounded-full">✓ 已啟用 9 折特權</span>
+            </div>
+            <p class="text-xs text-[#795548] mt-1">
+              目前可用積分：<strong id="vip-points-display" class="text-base text-[#e60012]">250</strong> 積分
+              <span class="text-[#a1887f] ml-1">（每滿 100 積分結帳可折抵 $2.00）</span>
+            </p>
+          </div>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="logoutVip()" 
+          class="text-xs font-bold text-[#8d6e63] hover:text-[#e60012] bg-white border border-[#ffe0b2] px-3.5 py-2 rounded-xl transition cursor-pointer"
+        >
+          切換帳號 / 登出
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 主內容區塊：桌面版左右雙欄（左側菜單 + 右側懸浮購物車），手機版上下堆疊 -->
+  <main class="max-w-6xl mx-auto px-4 pt-5 sm:pt-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- 左側：飲品分類與菜單區 (佔 8 欄) -->
+      <section class="lg:col-span-8">
+        <!-- 分類篩選標籤列 -->
+        <div class="bg-white rounded-2xl p-3 shadow-sm border-2 border-[#ffe0e3] mb-6 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap gap-2" id="category-tabs">
+            <button onclick="filterCategory('all')" data-cat="all" class="cat-btn active bg-[#e60012] text-white font-bold px-4 py-2 rounded-xl text-sm shadow-sm transition cursor-pointer">
+              ✨ 全部飲品 (All)
+            </button>
+            <button onclick="filterCategory('milktea')" data-cat="milktea" class="cat-btn bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffe3e6] font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer">
+              🧋 醇香奶茶 (Milk Tea)
+            </button>
+            <button onclick="filterCategory('fruittea')" data-cat="fruittea" class="cat-btn bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffe3e6] font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer">
+              🍋 鮮果茶飲 (Fruit Tea)
+            </button>
+            <button onclick="filterCategory('icecream')" data-cat="icecream" class="cat-btn bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffe3e6] font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer">
+              🍦 冰淇淋聖代 (Ice Cream)
+            </button>
+          </div>
+          <span class="text-xs text-[#8d6e63] px-2">點擊飲品可客製冰塊、甜度與加料！</span>
+        </div>
+
+        <!-- 飲品網格列表 -->
+        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+          <!-- 菜單卡片由 JavaScript 動態產生 -->
+        </div>
+      </section>
+
+      <!-- 右側：購物車面板 (佔 4 欄，桌面版固定在右側) -->
+      <aside id="shopping-cart-section" class="lg:col-span-4 lg:sticky lg:top-24">
+        <div class="bg-white rounded-[28px] shadow-[0_12px_35px_rgba(230,0,18,0.12)] border-4 border-[#ffd54f] overflow-hidden">
+          
+          <!-- 購物車標題列 -->
+          <div class="bg-[#fff8e1] px-5 py-4 border-b-2 border-dashed border-[#ffe082] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🛒</span>
+              <h2 class="text-lg font-bold text-[#d84315]">我的點餐購物車</h2>
+            </div>
+            <span id="cart-count-badge" class="bg-[#e60012] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+              0 杯
+            </span>
+          </div>
+
+          <!-- 購物車內容清單 -->
+          <div id="cart-items-container" class="p-4 max-h-[420px] overflow-y-auto space-y-3">
+            <!-- 空購物車預設提示 -->
+            <div id="empty-cart-msg" class="py-10 text-center text-[#a1887f]">
+              <div class="text-5xl mb-3 opacity-80">🧋</div>
+              <p class="font-bold text-base text-[#5d4037]">購物車還是空的喔！</p>
+              <p class="text-xs mt-1">快從左邊挑選喜歡的甜蜜飲品吧～</p>
+            </div>
+          </div>
+
+          <!-- 購物車底部結算區 -->
+          <div class="bg-[#fffdf7] p-5 border-t-2 border-[#ffe0b2]">
+            <!-- 取餐 / 外賣地點確認提示 -->
+            <div class="bg-[#ffebee]/70 border border-[#ffcdd2] rounded-xl px-3 py-2 mb-3 text-xs space-y-0.5">
+              <div class="flex items-center justify-between">
+                <span id="cart-location-label" class="text-[#795548] font-bold">🛍️ 外帶地點：</span>
+                <span id="cart-takeout-store" class="font-bold text-[#e60012]">澳門議事亭前地店</span>
+              </div>
+              <p id="cart-delivery-address-preview" class="hidden text-[11px] text-[#5d4037] truncate">請於上方輸入外賣送貨地址</p>
+            </div>
+
+            <!-- 金額明細計算 -->
+            <div class="space-y-1.5 text-sm mb-3 pb-3 border-b border-dashed border-[#ffe0b2]">
+              <div class="flex justify-between items-center text-[#8d6e63]">
+                <span>飲品小計 (<span id="summary-qty" class="font-bold text-[#4e342e]">0 杯</span>)</span>
+                <span id="summary-subtotal" class="font-bold text-[#4e342e]">$0.00</span>
+              </div>
+
+              <!-- 外賣配送費顯示 -->
+              <div id="delivery-fee-row" class="hidden justify-between items-center text-[#d84315] font-bold">
+                <span>🛵 外賣配送費 <span id="delivery-free-tag" class="hidden text-[10px] bg-[#e8f5e9] text-[#2e7d32] px-1.5 py-0.5 rounded ml-1">滿$15免運</span></span>
+                <span id="summary-delivery-fee">$2.00</span>
+              </div>
+
+              <!-- VIP 9 折優惠顯示 -->
+              <div id="vip-discount-row" class="hidden justify-between items-center text-[#2e7d32] font-bold">
+                <span>👑 VIP 專享 9 折 (10% OFF)</span>
+                <span id="summary-vip-discount">-$0.00</span>
+              </div>
+
+              <!-- 未登入 VIP 提示條 -->
+              <div id="vip-upsell-tip" class="bg-[#fff3e0] text-[#d84315] text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-between">
+                <span>💡 登入手機 VIP 立即享 9 折！</span>
+                <button type="button" onclick="fillDemoVip()" class="underline font-bold hover:text-[#e60012] cursor-pointer">立即登入</button>
+              </div>
+
+              <!-- 積分折抵勾選區（登入且積分 >= 100 且有商品時顯示） -->
+              <div id="points-redeem-box" class="hidden pt-1">
+                <label class="flex items-center justify-between bg-[#fff8e1] border border-[#ffd54f] px-2.5 py-1.5 rounded-xl cursor-pointer select-none">
+                  <span class="flex items-center gap-1.5 text-xs font-bold text-[#5d4037]">
+                    <input type="checkbox" id="use-points-checkbox" onchange="renderCart()" class="accent-[#e60012] w-4 h-4 cursor-pointer">
+                    <span>使用 100 積分折抵</span>
+                  </span>
+                  <span class="text-xs font-bold text-[#e60012]">-$2.00</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center text-lg font-bold text-[#3d231d] mb-4">
+              <span>應付總金額</span>
+              <span id="summary-total" class="text-2xl text-[#e60012]">$0.00</span>
+            </div>
+
+            <div class="flex gap-2">
+              <button 
+                id="clear-cart-btn"
+                onclick="clearCart()" 
+                disabled
+                class="px-3.5 py-3 rounded-2xl border-2 border-[#ffcdd2] text-[#e60012] font-bold text-sm hover:bg-[#ffebee] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                title="清空購物車"
+              >
+                🗑️ 清空
+              </button>
+              <button 
+                id="checkout-btn"
+                onclick="openWechatPayModal()" 
+                disabled
+                class="flex-1 py-3 px-4 rounded-2xl bg-[#07C160] hover:bg-[#06ad56] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <!-- 微信支付圖示 SVG -->
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M8.69 4C4.99 4 2 6.53 2 9.65c0 1.8 1 3.4 2.56 4.44l-.64 1.94 2.25-1.13c.8.23 1.65.36 2.52.36.28 0 .56-.02.83-.05-.18-.57-.28-1.17-.28-1.8 0-3.13 2.98-5.66 6.66-5.66.29 0 .57.02.85.05C16.1 5.61 12.74 4 8.69 4zm-2.3 3.4c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm4.6 0c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm4.91 1.65c-3.12 0-5.65 2.13-5.65 4.76s2.53 4.76 5.65 4.76c.73 0 1.43-.12 2.08-.33l1.88.94-.53-1.61c1.32-.87 2.22-2.23 2.22-3.76 0-2.63-2.53-4.76-5.65-4.76zm-1.92 3.1c.42 0 .76.34.76.76s-.34.76-.76.76-.76-.34-.76-.76.34-.76.76-.76zm3.84 0c.42 0 .76.34.76.76s-.34.76-.76.76-.76-.34-.76-.76.34-.76.76-.76z"/>
+                </svg>
+                <span>微信支付結帳</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- 飲品客製化彈出視窗 (Modal) -->
+  <div id="customizer-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[30px] border-4 border-[#ffd54f] shadow-2xl overflow-hidden animate-pop max-h-[90vh] flex flex-col">
+      
+      <!-- 彈窗頂部飲品資訊與照片 -->
+      <div class="relative bg-gradient-to-r from-[#fff3e0] to-[#ffebee] p-5 flex items-center gap-4 border-b-2 border-dashed border-[#ffcc80]">
+        <img 
+          id="modal-drink-img" 
+          src="" 
+          alt="飲品照片" 
+          onerror="this.onerror=null; this.src='https://placehold.co/300x300/ffe082/e60012?text=MIXUE';"
+          class="w-20 h-20 rounded-2xl object-cover border-3 border-white shadow-md shrink-0 bg-white"
+        >
+        <div class="pr-6">
+          <span id="modal-drink-tag" class="inline-block text-[11px] font-bold bg-[#e60012] text-white px-2 py-0.5 rounded-full mb-1">招牌推薦</span>
+          <h3 id="modal-drink-name" class="text-lg font-bold text-[#3d231d] leading-tight">珍珠奶茶</h3>
+          <p id="modal-drink-en" class="text-xs text-[#8d6e63] mb-1">Pearl Milk Tea</p>
+          <p id="modal-drink-base-price" class="text-base font-bold text-[#e60012]">$4.60</p>
+        </div>
+        <!-- 關閉按鈕 -->
+        <button onclick="closeCustomizer()" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/90 text-[#5d4037] hover:bg-[#e60012] hover:text-white flex items-center justify-center font-bold shadow-sm transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- 彈窗中間可捲動客製化選項區 -->
+      <div class="p-5 overflow-y-auto space-y-5 flex-1">
+        
+        <!-- 1. 杯型選擇 -->
+        <div>
+          <label class="block text-sm font-bold text-[#5d4037] mb-2">🥤 選擇杯型 (Size)</label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-size" value="0" data-label="中杯 (M)" checked onchange="updateModalPrice()" class="peer hidden">
+              <div class="p-2.5 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-sm transition">
+                中杯 (M) <span class="block text-xs font-normal text-[#8d6e63]">標準價</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-size" value="0.50" data-label="大杯 (L)" onchange="updateModalPrice()" class="peer hidden">
+              <div class="p-2.5 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-sm transition">
+                大杯 (L) <span class="block text-xs font-normal text-[#e60012]">+$0.50</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. 冰塊選擇 -->
+        <div>
+          <label class="block text-sm font-bold text-[#5d4037] mb-2">🧊 冰塊調整 (Ice Level)</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-ice" value="正常冰" checked class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                正常冰
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-ice" value="少冰" class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                少冰
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-ice" value="去冰" class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                去冰
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 3. 甜度選擇 -->
+        <div>
+          <label class="block text-sm font-bold text-[#5d4037] mb-2">🍯 甜度調整 (Sugar Level)</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-sugar" value="全糖 100%" checked class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                全糖 100%
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-sugar" value="七分糖 70%" class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                七分糖 70%
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="modal-sugar" value="半糖 50%" class="peer hidden">
+              <div class="py-2 text-center rounded-xl border-2 border-[#ffe0b2] peer-checked:border-[#e60012] peer-checked:bg-[#fff5f5] peer-checked:text-[#e60012] font-bold text-xs sm:text-sm transition">
+                半糖 50%
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4. 添加配料（複選） -->
+        <div>
+          <label class="block text-sm font-bold text-[#5d4037] mb-2">✨ 添加配料（可多選）</label>
+          <div id="modal-toppings-list" class="space-y-2">
+            <!-- 配料列表由 JS 動態產生 -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 彈窗底部數量調整與加入購物車按鈕 -->
+      <div class="p-4 bg-[#fffdf7] border-t-2 border-[#ffe0b2] flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 bg-white border-2 border-[#ffcc80] rounded-2xl px-2 py-1">
+          <button type="button" onclick="changeModalQty(-1)" class="w-8 h-8 rounded-xl bg-[#fff3e0] text-[#e60012] font-bold text-lg hover:bg-[#ffe0b2] transition cursor-pointer">-</button>
+          <span id="modal-qty" class="w-7 text-center font-bold text-base text-[#3d231d]">1</span>
+          <button type="button" onclick="changeModalQty(1)" class="w-8 h-8 rounded-xl bg-[#fff3e0] text-[#e60012] font-bold text-lg hover:bg-[#ffe0b2] transition cursor-pointer">+</button>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="confirmAddToCart()" 
+          class="flex-1 py-3 px-4 rounded-2xl bg-[#e60012] hover:bg-[#cc0010] text-white font-bold text-sm sm:text-base shadow-md active:scale-95 transition cursor-pointer flex items-center justify-between"
+        >
+          <span>加入購物車</span>
+          <span id="modal-total-btn-price">$4.60</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 微信支付收銀台彈窗 (WeChat Pay Modal) -->
+  <div id="wechat-pay-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-[30px] shadow-2xl overflow-hidden animate-pop border-4 border-[#07C160]">
+      
+      <!-- 微信支付綠色頂部 -->
+      <div class="bg-[#07C160] text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 bg-white text-[#07C160] rounded-xl flex items-center justify-center shadow-xs">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+              <path d="M8.69 4C4.99 4 2 6.53 2 9.65c0 1.8 1 3.4 2.56 4.44l-.64 1.94 2.25-1.13c.8.23 1.65.36 2.52.36.28 0 .56-.02.83-.05-.18-.57-.28-1.17-.28-1.8 0-3.13 2.98-5.66 6.66-5.66.29 0 .57.02.85.05C16.1 5.61 12.74 4 8.69 4zm-2.3 3.4c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm4.6 0c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm4.91 1.65c-3.12 0-5.65 2.13-5.65 4.76s2.53 4.76 5.65 4.76c.73 0 1.43-.12 2.08-.33l1.88.94-.53-1.61c1.32-.87 2.22-2.23 2.22-3.76 0-2.63-2.53-4.76-5.65-4.76zm-1.92 3.1c.42 0 .76.34.76.76s-.34.76-.76.76-.76-.34-.76-.76.34-.76.76-.76zm3.84 0c.42 0 .76.34.76.76s-.34.76-.76.76-.76-.34-.76-.76.34-.76.76-.76z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-base leading-tight">微信支付 WeChat Pay</h3>
+            <p class="text-[11px] text-green-100">安全加密收銀台</p>
+          </div>
+        </div>
+        <button onclick="closeWechatPayModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- 付款資訊與二維碼 -->
+      <div class="p-6 text-center bg-[#f9fbf9]">
+        <p class="text-xs text-[#666] mb-0.5">收款商戶：<strong class="text-[#333]">蜜雪甜蜜茶飲店 (MIXUE)</strong></p>
+        <p class="text-[11px] text-[#07C160] font-bold mb-1.5"><span id="wx-location-title">🛍️ 外帶自取門市：</span><span id="wx-pickup-store">澳門議事亭前地店</span></p>
+        <div id="wx-vip-tag" class="inline-block bg-[#fff8e1] border border-[#ffd54f] text-[#d84315] text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-2">
+          訪客結帳（未綁定 VIP 手機）
+        </div>
+
+        <div class="my-2">
+          <span class="text-xs text-[#666] block">應付金額</span>
+          <span id="wx-pay-amount" class="text-3xl font-bold text-[#07C160]">$0.00</span>
+        </div>
+
+        <!-- 模擬微信收款二維碼卡片 -->
+        <div class="bg-white p-3.5 rounded-2xl border-2 border-[#e0f2e9] shadow-sm inline-block my-2 relative">
+          <canvas id="wx-qr-canvas" width="176" height="176" class="block mx-auto rounded-lg"></canvas>
+          <p class="text-[11px] text-[#07C160] font-bold mt-2 flex items-center justify-center gap-1">
+            <span>📱 請打開微信「掃一掃」付款</span>
+          </p>
+        </div>
+
+        <p class="text-xs text-[#888] mt-1 mb-4">
+          支付剩餘時間：<span id="wx-countdown" class="font-bold text-[#e60012]">05:00</span>
+        </p>
+
+        <!-- 模擬支付成功按鈕（方便測試完整流程） -->
+        <button 
+          type="button"
+          onclick="confirmWechatPaymentSuccess()" 
+          class="w-full py-3.5 px-4 rounded-2xl bg-[#07C160] hover:bg-[#06ad56] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg active:scale-95 transition cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>✅ 模擬微信掃碼支付成功</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 結帳成功明細彈窗 (Receipt Modal) -->
+  <div id="receipt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-[30px] border-4 border-[#ffd54f] shadow-2xl p-6 text-center animate-pop">
+      <div class="w-16 h-16 bg-[#e8f5e9] rounded-full flex items-center justify-center text-4xl mx-auto mb-3 border-2 border-[#07C160]">
+        🎉
+      </div>
+      <h3 class="text-xl font-bold text-[#07C160] mb-1">微信支付成功！製作中</h3>
+      <p class="text-xs text-[#8d6e63] mb-2">取餐號碼：<span id="receipt-order-no" class="font-bold text-[#3d231d] bg-[#ffd54f] px-2.5 py-0.5 rounded">#888</span></p>
+      
+      <!-- 微信交易單號與 VIP 積分獲得提示 -->
+      <div class="bg-[#f5f5f5] rounded-xl p-2.5 mb-3 text-[11px] text-[#666] space-y-1 text-left">
+        <div class="flex justify-between gap-2">
+          <span id="receipt-location-label" class="shrink-0">🛍️ 外帶取餐門市：</span>
+          <span id="receipt-pickup-store" class="font-bold text-[#3d231d] text-right">澳門議事亭前地店</span>
+        </div>
+        <div class="flex justify-between">
+          <span>配送 / 取餐方式：</span>
+          <span id="receipt-order-type" class="font-bold text-[#e60012]">門市外帶自取 (Take-Out)</span>
+        </div>
+        <div class="flex justify-between">
+          <span>支付方式：</span>
+          <span class="font-bold text-[#07C160]">微信支付 (WeChat Pay)</span>
+        </div>
+        <div class="flex justify-between">
+          <span>交易單號：</span>
+          <span id="receipt-wx-tx" class="font-mono text-[#333]">420000202611238899</span>
+        </div>
+        <div id="receipt-vip-row" class="hidden justify-between text-[#d84315] font-bold pt-1 border-t border-dashed border-gray-300">
+          <span>👑 VIP 會員帳戶：</span>
+          <span id="receipt-vip-earned">+0 積分</span>
+        </div>
+      </div>
+      
+      <!-- 訂單明細列表 -->
+      <div id="receipt-items" class="bg-[#fffdf7] border-2 border-dashed border-[#ffcc80] rounded-2xl p-3.5 text-left max-h-44 overflow-y-auto space-y-2 mb-4 text-xs">
+        <!-- 由 JS 填入 -->
+      </div>
+
+      <div class="flex justify-between items-center font-bold text-base text-[#3d231d] px-2 mb-5">
+        <span>微信實付總額</span>
+        <span id="receipt-total" class="text-xl text-[#07C160]">$0.00</span>
+      </div>
+
+      <button 
+        onclick="finishAndResetOrder()" 
+        class="w-full py-3 rounded-2xl bg-[#e60012] text-white font-bold text-base shadow-md hover:bg-[#cc0010] active:scale-95 transition cursor-pointer"
+      >
+        完成並開始新點餐 ⛄
+      </button>
+    </div>
+  </div>
+
+  <!-- 底部浮動提示氣泡 (Toast) -->
+  <div id="toast-msg" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#3d231d] text-white px-5 py-2.5 rounded-full shadow-xl text-sm font-bold opacity-0 pointer-events-none transition-opacity duration-300 z-50 flex items-center gap-2">
+    <span>✅</span>
+    <span id="toast-text">已加入購物車！</span>
+  </div>
+
+  <!-- 模擬手機簡訊通知橫幅（顯示動態產生的驗證碼） -->
+  <div id="sms-banner" class="fixed top-20 right-4 max-w-xs w-[90vw] bg-[#1e293b] text-white p-3.5 rounded-2xl shadow-2xl border-2 border-[#ffd54f] z-50 hidden animate-pop">
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">💬</span>
+        <div>
+          <p class="text-xs font-bold text-[#ffd54f]">【MIXUE 蜜雪冰城】簡訊通知</p>
+          <p id="sms-banner-body" class="text-xs text-slate-200 mt-0.5 leading-relaxed">您的 VIP 登入驗證碼為：888888，5分鐘內有效。</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('sms-banner').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs font-bold cursor-pointer">✕</button>
+    </div>
+    <button 
+      type="button" 
+      onclick="autoFillGeneratedCode()" 
+      class="mt-2 w-full py-1.5 rounded-xl bg-[#ffd54f] hover:bg-[#ffca28] text-[#3d231d] font-bold text-xs transition cursor-pointer"
+    >
+      📋 一鍵填入驗證碼
+    </button>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 蜜雪冰城風味飲品與配料資料庫
+    // ==========================================
+    const MENU_ITEMS = [
+      {
+        id: 'pearl-milk-tea',
+        name: '招牌珍珠奶茶',
+        enName: 'Pearl Milk Tea',
+        category: 'milktea',
+        price: 4.60,
+        tag: '人氣 TOP 1',
+        desc: '經典錫蘭紅茶搭配香濃牛乳與Q彈黑糖珍珠，蜜雪必點招牌！',
+        img: 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'brown-sugar-boba',
+        name: '黑糖珍珠鮮奶茶',
+        enName: 'Brown Sugar Pearl Milk Tea',
+        category: 'milktea',
+        price: 5.00,
+        tag: '濃郁黑糖',
+        desc: '慢火熬煮焦香黑糖掛壁，融入香醇鮮奶與軟糯大珍珠。',
+        img: 'https://images.unsplash.com/photo-1525803377221-4f6ccdaa5133?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'three-gems-mt',
+        name: '滿杯三兄弟奶茶',
+        enName: 'Three Gems Milk Tea',
+        category: 'milktea',
+        price: 5.00,
+        tag: '超值飽足',
+        desc: '一次集齊Q彈珍珠、滑嫩布丁與爽脆椰果，每口都是驚喜！',
+        img: 'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'taro-ball-mt',
+        name: '雙拼芋圓奶茶',
+        enName: 'Taro Ball Milk Tea',
+        category: 'milktea',
+        price: 4.80,
+        tag: '軟糯香甜',
+        desc: '手工雙色芋圓與地瓜圓，搭配絲滑紅茶拿鐵，香氣十足。',
+        img: 'https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'coconut-jelly-mt',
+        name: '椰果四季春奶茶',
+        enName: 'Coconut Jelly Milk Tea',
+        category: 'milktea',
+        price: 4.60,
+        tag: '清爽茶香',
+        desc: '清香烏龍茶底結合香甜爽脆椰果，清爽不膩口。',
+        img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'red-bean-mt',
+        name: '蜜香紅豆奶茶',
+        enName: 'Red Bean Milk Tea',
+        category: 'milktea',
+        price: 4.60,
+        tag: '綿密口感',
+        desc: '精選飽滿紅豆慢燉至綿密起沙，與醇厚奶茶完美交融。',
+        img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'fresh-lemonade',
+        name: '冰鮮檸檬水',
+        enName: 'Fresh Lemonade',
+        category: 'fruittea',
+        price: 3.60,
+        tag: '鎮店之寶',
+        desc: '新鮮現切尤力克黃檸檬搗壓出汁，酸甜解膩超級清爽！',
+        img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'strawberry-bobo',
+        name: '草莓啵啵果茶',
+        enName: 'Strawberry Bobo Tea',
+        category: 'fruittea',
+        price: 4.60,
+        tag: '少女心爆棚',
+        desc: '酸甜草莓果粒搭配晶瑩脆波波與茉莉綠茶，粉嫩又好喝。',
+        img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=500&q=80'
+      },
+      {
+        id: 'boba-sundae',
+        name: '黑糖珍珠聖代',
+        enName: 'Brown Sugar Pearl Sundae',
+        category: 'icecream',
+        price: 4.20,
+        tag: '雪王最愛',
+        desc: '濃郁奶香冰淇淋淋上溫熱黑糖珍珠，冰火交融超滿足！',
+        img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=500&q=80'
+      }
+    ];
+
+    const TOPPINGS_DATA = [
+      { id: 'pearl', name: 'Q彈黑糖珍珠 (Pearls)', price: 0.50 },
+      { id: 'pudding', name: '滑嫩焦糖布丁 (Pudding)', price: 0.80 },
+      { id: 'coconut', name: '爽脆椰果 (Coconut Jelly)', price: 0.50 },
+      { id: 'redbean', name: '綿密蜜紅豆 (Red Bean)', price: 0.60 },
+      { id: 'taroball', name: '雙色小芋圓 (Taro Balls)', price: 0.70 }
+    ];
+
+    // 預設 VIP 會員資料庫（支援自動註冊新手機號碼）
+    const VIP_ACCOUNTS_DB = {
+      '+853-66889900': { tier: '黃金雪王 VIP', points: 250, password: '123456' }
+    };
+
+    // 外帶取餐門市資料庫 (Take-Out Locations)
+    const PICKUP_STORES = {
+      senado: {
+        name: '澳門議事亭前地店',
+        address: '澳門板樟堂街 / 議事亭前地（大三巴步行街入口旁・外帶取餐櫃檯 1 號窗）',
+        waitTime: '● 營業中・約 5-10 分鐘可取'
+      },
+      campo: {
+        name: '澳門水坑尾旗艦店',
+        address: '澳門水坑尾街 128 號地下（近八佰伴步行區・街邊外帶窗口）',
+        waitTime: '● 營業中・約 5-8 分鐘可取'
+      },
+      taipa: {
+        name: '氹仔官也街店',
+        address: '氹仔舊城區官也街 42 號（手信街中心・專屬外帶快速通道）',
+        waitTime: '● 營業中・約 8-12 分鐘可取'
+      },
+      cotai: {
+        name: '路氹威尼斯人店',
+        address: '路氹連貫公路威尼斯人購物中心 3 樓大運河街（875 號舖外帶區）',
+        waitTime: '● 營業中・約 10-15 分鐘可取'
+      },
+      border: {
+        name: '澳門關閘廣場店',
+        address: '澳門關閘廣場地下商舖（出入境大樓旁・即點即走外帶窗）',
+        waitTime: '● 營業中・約 5 分鐘極速可取'
+      }
+    };
+
+    // 全局狀態變數
+    let orderMode = 'takeout'; // 'takeout' (外帶自取) 或 'delivery' (外賣送貨)
+    let currentPickupStoreKey = 'senado';
+    let deliveryZoneKey = 'peninsula';
+    let deliveryAddressText = '';
+    let currentCategory = 'all';
+    let selectedDrink = null;
+    let modalQty = 1;
+    let cart = [];
+    let wxTimerInterval = null;
+    let vipAuthMode = 'sms'; // 'sms' 或 'password'
+    let generatedSmsCode = '';
+    let generatedSmsTarget = '';
+    let smsCooldownTimer = null;
+    let vipState = {
+      isLoggedIn: false,
+      countryCode: '+853',
+      phone: '',
+      tier: '黃金雪王 VIP',
+      points: 0,
+      discountRate: 0.9 // 9 折優惠 (10% OFF)
+    };
+
+    // ==========================================
+    // 1.5 外帶取餐門市 & 外賣送貨地址切換邏輯
+    // ==========================================
+    function switchOrderMode(mode) {
+      orderMode = mode;
+      const takeoutBtn = document.getElementById('mode-takeout-btn');
+      const deliveryBtn = document.getElementById('mode-delivery-btn');
+      const takeoutPanel = document.getElementById('takeout-location-panel');
+      const deliveryPanel = document.getElementById('delivery-location-panel');
+
+      if (mode === 'takeout') {
+        takeoutBtn.className = 'px-3.5 py-1.5 rounded-full bg-[#e60012] text-white font-bold text-xs sm:text-sm shadow-xs transition cursor-pointer flex items-center gap-1.5';
+        deliveryBtn.className = 'px-3.5 py-1.5 rounded-full bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffebee] border border-[#ffcdd2] font-bold text-xs sm:text-sm transition cursor-pointer flex items-center gap-1.5';
+        takeoutPanel.classList.remove('hidden');
+        takeoutPanel.classList.add('flex');
+        deliveryPanel.classList.add('hidden');
+        deliveryPanel.classList.remove('flex');
+        updatePickupLocation(true);
+      } else {
+        deliveryBtn.className = 'px-3.5 py-1.5 rounded-full bg-[#e60012] text-white font-bold text-xs sm:text-sm shadow-xs transition cursor-pointer flex items-center gap-1.5';
+        takeoutBtn.className = 'px-3.5 py-1.5 rounded-full bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffebee] border border-[#ffcdd2] font-bold text-xs sm:text-sm transition cursor-pointer flex items-center gap-1.5';
+        deliveryPanel.classList.remove('hidden');
+        deliveryPanel.classList.add('flex');
+        takeoutPanel.classList.add('hidden');
+        takeoutPanel.classList.remove('flex');
+        updateDeliveryLocation(true);
+      }
+      renderCart();
+    }
+
+    function updatePickupLocation(silent = false) {
+      const selectEl = document.getElementById('pickup-location-select');
+      if (!selectEl) return;
+      currentPickupStoreKey = selectEl.value;
+      const store = PICKUP_STORES[currentPickupStoreKey] || PICKUP_STORES.senado;
+
+      document.getElementById('store-address-display').textContent = store.address;
+      document.getElementById('order-mode-eta').textContent = store.waitTime;
+      document.getElementById('cart-location-label').textContent = '🛍️ 外帶地點：';
+      document.getElementById('cart-takeout-store').textContent = store.name;
+      document.getElementById('cart-delivery-address-preview').classList.add('hidden');
+      if (!silent) showToast(`🛍️ 已切換外帶取餐門市：${store.name}`);
+    }
+
+    function updateDeliveryLocation(silent = false) {
+      const zoneSelect = document.getElementById('delivery-zone-select');
+      const addrInput = document.getElementById('delivery-address-input');
+      if (!zoneSelect || !addrInput) return;
+
+      deliveryZoneKey = zoneSelect.value;
+      deliveryAddressText = addrInput.value.trim();
+
+      const selectedOpt = zoneSelect.options[zoneSelect.selectedIndex];
+      const zoneLabel = selectedOpt.text.split(' (')[0];
+      const baseFee = parseFloat(selectedOpt.getAttribute('data-fee') || '2.00');
+      const eta = selectedOpt.getAttribute('data-eta') || '30 分鐘送達';
+
+      document.getElementById('order-mode-eta').textContent = `🛵 外賣騎手配送・預計 ${eta}`;
+      document.getElementById('delivery-fee-hint').textContent = `配送區域：${zoneLabel}（基礎運費 $${baseFee.toFixed(2)}，滿 $15.00 免運）`;
+
+      document.getElementById('cart-location-label').textContent = '🛵 外賣送達：';
+      document.getElementById('cart-takeout-store').textContent = zoneLabel;
+
+      const previewEl = document.getElementById('cart-delivery-address-preview');
+      previewEl.classList.remove('hidden');
+      previewEl.textContent = deliveryAddressText ? `📍 ${deliveryAddressText}` : '⚠️ 請於上方填寫外賣詳細地址';
+
+      renderCart();
+      if (!silent && !deliveryAddressText) {
+        showToast(`🛵 已選擇外賣區域：${zoneLabel}`);
+      }
+    }
+
+    // ==========================================
+    // 2. VIP 手機會員系統邏輯（簡訊驗證碼 / 密碼）
+    // ==========================================
+    function switchVipAuthMode(mode) {
+      vipAuthMode = mode;
+      const smsTab = document.getElementById('tab-auth-sms');
+      const pwdTab = document.getElementById('tab-auth-pwd');
+      const smsBox = document.getElementById('auth-sms-box');
+      const pwdBox = document.getElementById('auth-pwd-box');
+
+      if (mode === 'sms') {
+        smsTab.className = 'px-3 py-1 rounded-full bg-[#e60012] text-white shadow-xs transition cursor-pointer';
+        pwdTab.className = 'px-3 py-1 rounded-full bg-white text-[#795548] border border-[#ffcc80] hover:bg-[#fff3e0] transition cursor-pointer';
+        smsBox.classList.remove('hidden');
+        smsBox.classList.add('flex');
+        pwdBox.classList.add('hidden');
+        pwdBox.classList.remove('flex');
+      } else {
+        pwdTab.className = 'px-3 py-1 rounded-full bg-[#e60012] text-white shadow-xs transition cursor-pointer';
+        smsTab.className = 'px-3 py-1 rounded-full bg-white text-[#795548] border border-[#ffcc80] hover:bg-[#fff3e0] transition cursor-pointer';
+        pwdBox.classList.remove('hidden');
+        pwdBox.classList.add('flex');
+        smsBox.classList.add('hidden');
+        smsBox.classList.remove('flex');
+      }
+    }
+
+    function sendSmsCode() {
+      const code = document.getElementById('vip-country-code').value;
+      const rawPhone = document.getElementById('vip-phone-input').value.trim().replace(/\s+/g, '');
+
+      if (!/^\d{6,11}$/.test(rawPhone)) {
+        showToast('⚠️ 請先輸入 6 至 11 位手機號碼再獲取驗證碼！');
+        return;
+      }
+
+      // 產生 6 位隨機驗證碼
+      generatedSmsCode = String(Math.floor(100000 + Math.random() * 900000));
+      generatedSmsTarget = `${code}-${rawPhone}`;
+
+      // 顯示模擬手機簡訊通知橫幅
+      const smsBanner = document.getElementById('sms-banner');
+      document.getElementById('sms-banner-body').innerHTML =
+        `發送至 <strong>${code} ${rawPhone}</strong>：您的 VIP 驗證碼為 <strong class="text-[#ffd54f] text-sm tracking-wider">${generatedSmsCode}</strong>（5分鐘內有效）`;
+      smsBanner.classList.remove('hidden');
+
+      // 啟動 60 秒重新發送倒數
+      const sendBtn = document.getElementById('send-sms-btn');
+      let cooldown = 60;
+      sendBtn.disabled = true;
+      sendBtn.textContent = `${cooldown}s 後重發`;
+
+      clearInterval(smsCooldownTimer);
+      smsCooldownTimer = setInterval(() => {
+        cooldown--;
+        if (cooldown <= 0) {
+          clearInterval(smsCooldownTimer);
+          sendBtn.disabled = false;
+          sendBtn.textContent = '獲取驗證碼';
+        } else {
+          sendBtn.textContent = `${cooldown}s 後重發`;
+        }
+      }, 1000);
+
+      showToast(`📩 驗證碼已發送至 ${code} ${rawPhone}`);
+    }
+
+    function autoFillGeneratedCode() {
+      if (generatedSmsCode) {
+        document.getElementById('vip-sms-input').value = generatedSmsCode;
+        document.getElementById('sms-banner').classList.add('hidden');
+      }
+    }
+
+    function loginVip() {
+      const code = document.getElementById('vip-country-code').value;
+      const rawPhone = document.getElementById('vip-phone-input').value.trim().replace(/\s+/g, '');
+
+      if (!/^\d{6,11}$/.test(rawPhone)) {
+        showToast('⚠️ 請輸入 6 至 11 位有效手機號碼！');
+        return;
+      }
+
+      const accountKey = `${code}-${rawPhone}`;
+      let isNewMember = false;
+
+      if (vipAuthMode === 'sms') {
+        const inputCode = document.getElementById('vip-sms-input').value.trim();
+        if (!generatedSmsCode || generatedSmsTarget !== accountKey) {
+          showToast('⚠️ 請先點擊「獲取驗證碼」！');
+          return;
+        }
+        if (inputCode !== generatedSmsCode) {
+          showToast('❌ 驗證碼錯誤，請重新確認！');
+          return;
+        }
+
+        // 驗證碼通過，若為新號碼則自動建立帳號（預設密碼 123456）
+        if (!VIP_ACCOUNTS_DB[accountKey]) {
+          VIP_ACCOUNTS_DB[accountKey] = {
+            tier: '甜蜜新星 VIP',
+            points: 100,
+            password: '123456'
+          };
+          isNewMember = true;
+        }
+      } else {
+        // 密碼登入模式
+        const inputPwd = document.getElementById('vip-pwd-input').value;
+        if (!inputPwd || inputPwd.length < 4) {
+          showToast('⚠️ 請輸入至少 4 位數會員密碼！');
+          return;
+        }
+
+        if (!VIP_ACCOUNTS_DB[accountKey]) {
+          // 首次使用密碼直接註冊新帳號
+          VIP_ACCOUNTS_DB[accountKey] = {
+            tier: '甜蜜新星 VIP',
+            points: 100,
+            password: inputPwd
+          };
+          isNewMember = true;
+        } else if (VIP_ACCOUNTS_DB[accountKey].password !== inputPwd) {
+          showToast('❌ 密碼錯誤！（示範帳號密碼為 123456）');
+          return;
+        }
+      }
+
+      vipState.isLoggedIn = true;
+      vipState.countryCode = code;
+      vipState.phone = rawPhone;
+      vipState.tier = VIP_ACCOUNTS_DB[accountKey].tier;
+      vipState.points = VIP_ACCOUNTS_DB[accountKey].points;
+
+      document.getElementById('sms-banner').classList.add('hidden');
+      updateVipUI();
+      renderCart();
+
+      if (isNewMember) {
+        showToast('🎉 新 VIP 註冊成功！贈送 100 積分並享全單 9 折（預設密碼 123456）！');
+      } else {
+        showToast(`👑 驗證成功！歡迎 VIP 會員 ${code} ${rawPhone}`);
+      }
+    }
+
+    function fillDemoVip() {
+      document.getElementById('vip-country-code').value = '+853';
+      document.getElementById('vip-phone-input').value = '66889900';
+
+      if (vipAuthMode === 'sms') {
+        sendSmsCode();
+        setTimeout(() => {
+          autoFillGeneratedCode();
+          loginVip();
+        }, 400);
+      } else {
+        document.getElementById('vip-pwd-input').value = '123456';
+        loginVip();
+      }
+    }
+
+    function logoutVip() {
+      vipState.isLoggedIn = false;
+      vipState.phone = '';
+      vipState.points = 0;
+      generatedSmsCode = '';
+      document.getElementById('vip-sms-input').value = '';
+      document.getElementById('vip-pwd-input').value = '';
+
+      const redeemCb = document.getElementById('use-points-checkbox');
+      if (redeemCb) redeemCb.checked = false;
+
+      updateVipUI();
+      renderCart();
+      showToast('已登出 VIP 會員帳號');
+    }
+
+    function updateVipUI() {
+      const guestView = document.getElementById('vip-guest-view');
+      const memberView = document.getElementById('vip-member-view');
+
+      if (vipState.isLoggedIn) {
+        guestView.classList.add('hidden');
+        memberView.classList.remove('hidden');
+        memberView.classList.add('flex');
+        document.getElementById('vip-tier-badge').textContent = vipState.tier;
+        document.getElementById('vip-display-phone').textContent = `${vipState.countryCode} ${vipState.phone}`;
+        document.getElementById('vip-points-display').textContent = vipState.points;
+      } else {
+        guestView.classList.remove('hidden');
+        memberView.classList.add('hidden');
+        memberView.classList.remove('flex');
+      }
+    }
+
+    // ==========================================
+    // 3. 菜單渲染與分類篩選
+    // ==========================================
+    function renderMenu() {
+      const grid = document.getElementById('menu-grid');
+      if (!grid) return;
+
+      const filtered = currentCategory === 'all'
+        ? MENU_ITEMS
+        : MENU_ITEMS.filter(item => item.category === currentCategory);
+
+      grid.innerHTML = filtered.map(item => `
+        <div onclick="openCustomizer('${item.id}')" class="menu-card bg-white rounded-[24px] border-3 border-[#ffe0e3] overflow-hidden shadow-sm cursor-pointer flex flex-col justify-between">
+          <div>
+            <div class="relative h-44 bg-[#fff8e1] overflow-hidden">
+              <img 
+                src="${item.img}" 
+                alt="${item.name}" 
+                onerror="this.onerror=null; this.src='https://placehold.co/400x300/ffe082/e60012?text=MIXUE';"
+                class="drink-img w-full h-full object-cover"
+              >
+              <span class="absolute top-3 left-3 bg-[#e60012] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                ${item.tag}
+              </span>
+            </div>
+            <div class="p-4 pb-2">
+              <h3 class="font-bold text-base text-[#3d231d] leading-snug">${item.name}</h3>
+              <p class="text-[11px] text-[#a1887f] font-medium mb-1.5">${item.enName}</p>
+              <p class="text-xs text-[#795548] line-clamp-2">${item.desc}</p>
+            </div>
+          </div>
+
+          <div class="px-4 pb-4 pt-2 flex items-center justify-between">
+            <span class="text-lg font-bold text-[#e60012]">$${item.price.toFixed(2)}</span>
+            <button type="button" class="bg-[#ffd54f] hover:bg-[#ffca28] text-[#5d4037] font-bold text-xs px-3 py-1.5 rounded-full shadow-xs transition">
+              + 選規格
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 切換分類標籤
+    function filterCategory(category) {
+      currentCategory = category;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.getAttribute('data-cat') === category) {
+          btn.className = 'cat-btn active bg-[#e60012] text-white font-bold px-4 py-2 rounded-xl text-sm shadow-sm transition cursor-pointer';
+        } else {
+          btn.className = 'cat-btn bg-[#fff5f5] text-[#5d4037] hover:bg-[#ffe3e6] font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer';
+        }
+      });
+      renderMenu();
+    }
+
+    // ==========================================
+    // 4. 客製化視窗邏輯 (Modal)
+    // ==========================================
+    function openCustomizer(drinkId) {
+      selectedDrink = MENU_ITEMS.find(d => d.id === drinkId);
+      if (!selectedDrink) return;
+
+      modalQty = 1;
+      document.getElementById('modal-qty').textContent = modalQty;
+      document.getElementById('modal-drink-img').src = selectedDrink.img;
+      document.getElementById('modal-drink-tag').textContent = selectedDrink.tag;
+      document.getElementById('modal-drink-name').textContent = selectedDrink.name;
+      document.getElementById('modal-drink-en').textContent = selectedDrink.enName;
+      document.getElementById('modal-drink-base-price').textContent = `$${selectedDrink.price.toFixed(2)}`;
+
+      // 重設杯型、冰塊、甜度為預設值
+      document.querySelector('input[name="modal-size"][value="0"]').checked = true;
+      document.querySelector('input[name="modal-ice"][value="正常冰"]').checked = true;
+      document.querySelector('input[name="modal-sugar"][value="全糖 100%"]').checked = true;
+
+      // 渲染加料複選框
+      const toppingsContainer = document.getElementById('modal-toppings-list');
+      toppingsContainer.innerHTML = TOPPINGS_DATA.map(t => `
+        <label class="flex items-center justify-between p-2.5 bg-[#fffdf7] hover:bg-[#fff3e0] border-2 border-[#ffe0b2] rounded-xl cursor-pointer transition select-none">
+          <span class="flex items-center gap-2.5 text-sm font-medium text-[#4e342e]">
+            <input type="checkbox" class="modal-topping-cb w-4 h-4 accent-[#e60012] rounded cursor-pointer" value="${t.price}" data-name="${t.name}" onchange="updateModalPrice()">
+            <span>${t.name}</span>
+          </span>
+          <span class="text-xs font-bold text-[#e60012] bg-[#ffebee] px-2 py-0.5 rounded-md">+$${t.price.toFixed(2)}</span>
+        </label>
+      `).join('');
+
+      updateModalPrice();
+
+      const modal = document.getElementById('customizer-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCustomizer() {
+      const modal = document.getElementById('customizer-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function changeModalQty(delta) {
+      modalQty = Math.max(1, modalQty + delta);
+      document.getElementById('modal-qty').textContent = modalQty;
+      updateModalPrice();
+    }
+
+    // 即時計算彈窗內的單杯與總計價格
+    function calculateModalUnitPrice() {
+      if (!selectedDrink) return 0;
+      let price = selectedDrink.price;
+
+      // 加上杯型差價
+      const sizeInput = document.querySelector('input[name="modal-size"]:checked');
+      if (sizeInput) price += parseFloat(sizeInput.value);
+
+      // 加上所有勾選的配料價格
+      document.querySelectorAll('.modal-topping-cb:checked').forEach(cb => {
+        price += parseFloat(cb.value);
+      });
+
+      return price;
+    }
+
+    function updateModalPrice() {
+      const unitPrice = calculateModalUnitPrice();
+      const total = unitPrice * modalQty;
+      document.getElementById('modal-total-btn-price').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // ==========================================
+    // 5. 購物車邏輯 (Shopping Cart)
+    // ==========================================
+    function confirmAddToCart() {
+      if (!selectedDrink) return;
+
+      const sizeInput = document.querySelector('input[name="modal-size"]:checked');
+      const iceInput = document.querySelector('input[name="modal-ice"]:checked');
+      const sugarInput = document.querySelector('input[name="modal-sugar"]:checked');
+
+      const sizeLabel = sizeInput ? sizeInput.getAttribute('data-label') : '中杯 (M)';
+      const iceLabel = iceInput ? iceInput.value : '正常冰';
+      const sugarLabel = sugarInput ? sugarInput.value : '全糖 100%';
+
+      const chosenToppings = [];
+      document.querySelectorAll('.modal-topping-cb:checked').forEach(cb => {
+        chosenToppings.push(cb.getAttribute('data-name').split(' ')[0]); // 取得中文名稱
+      });
+
+      const unitPrice = calculateModalUnitPrice();
+
+      // 產生唯一組合鍵值，若完全相同規格則合併數量
+      const configKey = `${selectedDrink.id}|${sizeLabel}|${iceLabel}|${sugarLabel}|${chosenToppings.sort().join(',')}`;
+
+      const existingIndex = cart.findIndex(item => item.configKey === configKey);
+      if (existingIndex > -1) {
+        cart[existingIndex].qty += modalQty;
+      } else {
+        cart.push({
+          configKey,
+          name: selectedDrink.name,
+          img: selectedDrink.img,
+          size: sizeLabel,
+          ice: iceLabel,
+          sugar: sugarLabel,
+          toppings: chosenToppings,
+          unitPrice: unitPrice,
+          qty: modalQty
+        });
+      }
+
+      closeCustomizer();
+      renderCart();
+      showToast(`已將「${selectedDrink.name}」加入購物車！`);
+    }
+
+    // 調整購物車內某項商品數量
+    function updateCartItemQty(index, delta) {
+      if (!cart[index]) return;
+      cart[index].qty += delta;
+      if (cart[index].qty <= 0) {
+        cart.splice(index, 1);
+      }
+      renderCart();
+    }
+
+    // 移除單一商品
+    function removeCartItem(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    // 清空購物車
+    function clearCart() {
+      cart = [];
+      renderCart();
+      showToast('已清空購物車');
+    }
+
+    // 重新渲染購物車畫面與總金額
+    function getCartPricing() {
+      let totalQty = 0;
+      let subtotal = 0;
+      cart.forEach(item => {
+        totalQty += item.qty;
+        subtotal += item.unitPrice * item.qty;
+      });
+
+      // 計算外賣配送費（滿 $15.00 免運費）
+      let deliveryFee = 0;
+      let isFreeDelivery = false;
+      if (orderMode === 'delivery' && totalQty > 0) {
+        const zoneSelect = document.getElementById('delivery-zone-select');
+        const selectedOpt = zoneSelect ? zoneSelect.options[zoneSelect.selectedIndex] : null;
+        const baseFee = selectedOpt ? parseFloat(selectedOpt.getAttribute('data-fee') || '2.00') : 2.00;
+        if (subtotal >= 15.00) {
+          deliveryFee = 0;
+          isFreeDelivery = true;
+        } else {
+          deliveryFee = baseFee;
+        }
+      }
+
+      const vipDiscount = vipState.isLoggedIn ? subtotal * (1 - vipState.discountRate) : 0;
+      const afterVip = subtotal - vipDiscount;
+
+      const redeemCb = document.getElementById('use-points-checkbox');
+      const canRedeem = vipState.isLoggedIn && vipState.points >= 100 && afterVip >= 2.00;
+      const pointsDiscount = (canRedeem && redeemCb && redeemCb.checked) ? 2.00 : 0;
+
+      const finalTotal = Math.max(0, afterVip - pointsDiscount + deliveryFee);
+      return { totalQty, subtotal, deliveryFee, isFreeDelivery, vipDiscount, pointsDiscount, finalTotal, canRedeem };
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      const emptyMsg = document.getElementById('empty-cart-msg');
+      const countBadge = document.getElementById('cart-count-badge');
+      const mobileBadge = document.getElementById('mobile-cart-badge');
+      const summaryQty = document.getElementById('summary-qty');
+      const summarySubtotal = document.getElementById('summary-subtotal');
+      const summaryTotal = document.getElementById('summary-total');
+      const checkoutBtn = document.getElementById('checkout-btn');
+      const clearBtn = document.getElementById('clear-cart-btn');
+
+      const deliveryFeeRow = document.getElementById('delivery-fee-row');
+      const summaryDeliveryFee = document.getElementById('summary-delivery-fee');
+      const deliveryFreeTag = document.getElementById('delivery-free-tag');
+
+      const vipDiscountRow = document.getElementById('vip-discount-row');
+      const summaryVipDiscount = document.getElementById('summary-vip-discount');
+      const vipUpsellTip = document.getElementById('vip-upsell-tip');
+      const pointsRedeemBox = document.getElementById('points-redeem-box');
+
+      const pricing = getCartPricing();
+
+      countBadge.textContent = `${pricing.totalQty} 杯`;
+      mobileBadge.textContent = pricing.totalQty;
+      summaryQty.textContent = `${pricing.totalQty} 杯`;
+      summarySubtotal.textContent = `$${pricing.subtotal.toFixed(2)}`;
+      summaryTotal.textContent = `$${pricing.finalTotal.toFixed(2)}`;
+
+      // 更新外賣運費列顯示
+      if (orderMode === 'delivery' && pricing.totalQty > 0) {
+        deliveryFeeRow.classList.remove('hidden');
+        deliveryFeeRow.classList.add('flex');
+        summaryDeliveryFee.textContent = pricing.isFreeDelivery ? '$0.00' : `+$${pricing.deliveryFee.toFixed(2)}`;
+        if (pricing.isFreeDelivery) {
+          deliveryFreeTag.classList.remove('hidden');
+        } else {
+          deliveryFreeTag.classList.add('hidden');
+        }
+      } else {
+        deliveryFeeRow.classList.add('hidden');
+        deliveryFeeRow.classList.remove('flex');
+      }
+
+      // 更新 VIP 優惠與積分折抵區塊顯示
+      if (vipState.isLoggedIn) {
+        vipUpsellTip.classList.add('hidden');
+        vipDiscountRow.classList.remove('hidden');
+        vipDiscountRow.classList.add('flex');
+        summaryVipDiscount.textContent = `-$${pricing.vipDiscount.toFixed(2)}`;
+      } else {
+        vipUpsellTip.classList.remove('hidden');
+        vipDiscountRow.classList.add('hidden');
+        vipDiscountRow.classList.remove('flex');
+      }
+
+      if (pricing.canRedeem) {
+        pointsRedeemBox.classList.remove('hidden');
+      } else {
+        pointsRedeemBox.classList.add('hidden');
+        const redeemCb = document.getElementById('use-points-checkbox');
+        if (redeemCb) redeemCb.checked = false;
+      }
+
+      if (cart.length === 0) {
+        container.innerHTML = '';
+        container.appendChild(emptyMsg);
+        emptyMsg.classList.remove('hidden');
+        checkoutBtn.disabled = true;
+        clearBtn.disabled = true;
+        return;
+      }
+
+      checkoutBtn.disabled = false;
+      clearBtn.disabled = false;
+
+      container.innerHTML = cart.map((item, idx) => {
+        const toppingsText = item.toppings.length > 0 
+          ? `加料：${item.toppings.join('、')}` 
+          : '無加配料';
+        const itemSubtotal = (item.unitPrice * item.qty).toFixed(2);
+
+        return `
+          <div class="bg-[#fffdf7] border-2 border-[#ffe0b2] rounded-2xl p-3 flex gap-3 items-start animate-pop relative">
+            <img 
+              src="${item.img}" 
+              alt="${item.name}" 
+              onerror="this.onerror=null; this.src='https://placehold.co/100x100/ffe082/e60012?text=Tea';"
+              class="w-14 h-14 rounded-xl object-cover border border-[#ffcc80] shrink-0"
+            >
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-start gap-1">
+                <h4 class="font-bold text-sm text-[#3d231d] truncate">${item.name}</h4>
+                <button onclick="removeCartItem(${idx})" class="text-[#bcaaa4] hover:text-[#e60012] text-xs px-1 cursor-pointer" title="移除此項">✕</button>
+              </div>
+              <p class="text-[11px] text-[#8d6e63] mt-0.5">${item.size} / ${item.ice} / ${item.sugar}</p>
+              <p class="text-[11px] text-[#d84315] mt-0.5 truncate">${toppingsText}</p>
+
+              <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-dashed border-[#ffe0b2]">
+                <span class="font-bold text-sm text-[#e60012]">$${itemSubtotal}</span>
+                <div class="flex items-center gap-1.5 bg-white border border-[#ffcc80] rounded-lg px-1 py-0.5">
+                  <button onclick="updateCartItemQty(${idx}, -1)" class="w-5 h-5 rounded bg-[#fff3e0] text-[#e60012] font-bold text-xs hover:bg-[#ffe0b2] cursor-pointer">-</button>
+                  <span class="text-xs font-bold w-5 text-center">${item.qty}</span>
+                  <button onclick="updateCartItemQty(${idx}, 1)" class="w-5 h-5 rounded bg-[#fff3e0] text-[#e60012] font-bold text-xs hover:bg-[#ffe0b2] cursor-pointer">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 6. 微信支付 (WeChat Pay) 與結帳明細功能
+    // ==========================================
+    function drawWechatQrCode(seedText) {
+      const canvas = document.getElementById('wx-qr-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const size = 176;
+      const cells = 21;
+      const cellSize = Math.floor(size / cells);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+
+      // 產生偽隨機矩陣圖案模擬真實微信支付二維碼
+      let hash = 0;
+      for (let i = 0; i < seedText.length; i++) {
+        hash = ((hash << 5) - hash) + seedText.charCodeAt(i);
+        hash |= 0;
+      }
+
+      ctx.fillStyle = '#1a1a1a';
+      for (let r = 0; r < cells; r++) {
+        for (let c = 0; c < cells; c++) {
+          // 跳過三個角落定位框區域
+          const inTopLeft = r < 7 && c < 7;
+          const inTopRight = r < 7 && c >= cells - 7;
+          const inBottomLeft = r >= cells - 7 && c < 7;
+          if (inTopLeft || inTopRight || inBottomLeft) continue;
+
+          const val = Math.abs(Math.sin(hash + r * 31 + c * 17));
+          if (val > 0.48) {
+            ctx.fillRect(c * cellSize + 2, r * cellSize + 2, cellSize - 1, cellSize - 1);
+          }
+        }
+      }
+
+      // 繪製三個標準 QR 定位方框
+      function drawFinder(x, y) {
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(x, y, cellSize * 7, cellSize * 7);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5);
+        ctx.fillStyle = '#07C160';
+        ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3);
+      }
+      drawFinder(2, 2);
+      drawFinder((cells - 7) * cellSize + 2, 2);
+      drawFinder(2, (cells - 7) * cellSize + 2);
+
+      // 中央微信支付綠色圓角徽章
+      const center = size / 2;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(center, center, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#07C160';
+      ctx.beginPath();
+      ctx.arc(center, center, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('¥', center, center + 1);
+    }
+
+    function openWechatPayModal() {
+      if (cart.length === 0) return;
+
+      if (orderMode === 'delivery' && !deliveryAddressText) {
+        showToast('⚠️ 請先在上方輸入外賣送貨詳細地址！');
+        document.getElementById('delivery-address-input').focus();
+        return;
+      }
+
+      const pricing = getCartPricing();
+      if (orderMode === 'takeout') {
+        const store = PICKUP_STORES[currentPickupStoreKey] || PICKUP_STORES.senado;
+        document.getElementById('wx-location-title').textContent = '🛍️ 外帶自取門市：';
+        document.getElementById('wx-pickup-store').textContent = store.name;
+      } else {
+        const zoneSelect = document.getElementById('delivery-zone-select');
+        const zoneLabel = zoneSelect.options[zoneSelect.selectedIndex].text.split(' (')[0];
+        document.getElementById('wx-location-title').textContent = '🛵 外賣送達地址：';
+        document.getElementById('wx-pickup-store').textContent = `${zoneLabel}・${deliveryAddressText}`;
+      }
+      document.getElementById('wx-pay-amount').textContent = `$${pricing.finalTotal.toFixed(2)}`;
+
+      const wxVipTag = document.getElementById('wx-vip-tag');
+      if (vipState.isLoggedIn) {
+        wxVipTag.textContent = `👑 VIP 會員：${vipState.countryCode} ${vipState.phone}（已享 9 折）`;
+        wxVipTag.className = 'inline-block bg-[#e8f5e9] border border-[#07C160] text-[#2e7d32] text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-2';
+      } else {
+        wxVipTag.textContent = '訪客結帳（未綁定 VIP 手機）';
+        wxVipTag.className = 'inline-block bg-[#fff8e1] border border-[#ffd54f] text-[#d84315] text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-2';
+      }
+
+      drawWechatQrCode(`MIXUE-${Date.now()}-${pricing.finalTotal}`);
+
+      // 啟動 5 分鐘倒數計時
+      clearInterval(wxTimerInterval);
+      let secondsLeft = 300;
+      const countdownEl = document.getElementById('wx-countdown');
+      countdownEl.textContent = '05:00';
+      wxTimerInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(wxTimerInterval);
+          countdownEl.textContent = '已過期';
+          return;
+        }
+        const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+        const s = String(secondsLeft % 60).padStart(2, '0');
+        countdownEl.textContent = `${m}:${s}`;
+      }, 1000);
+
+      const modal = document.getElementById('wechat-pay-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeWechatPayModal() {
+      clearInterval(wxTimerInterval);
+      const modal = document.getElementById('wechat-pay-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmWechatPaymentSuccess() {
+      closeWechatPayModal();
+      const pricing = getCartPricing();
+
+      // 產生隨機取餐號碼與微信交易單號
+      const randomNo = Math.floor(100 + Math.random() * 900);
+      const txId = `420000${Date.now().toString().slice(-10)}`;
+
+      if (orderMode === 'takeout') {
+        const store = PICKUP_STORES[currentPickupStoreKey] || PICKUP_STORES.senado;
+        document.getElementById('receipt-location-label').textContent = '🛍️ 外帶取餐門市：';
+        document.getElementById('receipt-pickup-store').textContent = store.name;
+        document.getElementById('receipt-order-type').textContent = '門市外帶自取 (Take-Out)';
+      } else {
+        const zoneSelect = document.getElementById('delivery-zone-select');
+        const zoneLabel = zoneSelect.options[zoneSelect.selectedIndex].text.split(' (')[0];
+        document.getElementById('receipt-location-label').textContent = '🛵 外賣送貨地址：';
+        document.getElementById('receipt-pickup-store').textContent = `${zoneLabel} ${deliveryAddressText}`;
+        document.getElementById('receipt-order-type').textContent = '外賣騎手送貨上門 (Delivery)';
+      }
+
+      document.getElementById('receipt-order-no').textContent = `#A${randomNo}`;
+      document.getElementById('receipt-wx-tx').textContent = txId;
+
+      // 處理 VIP 積分扣除與新增（每消費 $1 獲得 10 積分）
+      const receiptVipRow = document.getElementById('receipt-vip-row');
+      if (vipState.isLoggedIn) {
+        const earnedPoints = Math.round(pricing.finalTotal * 10);
+        const spentPoints = pricing.pointsDiscount > 0 ? 100 : 0;
+        vipState.points = Math.max(0, vipState.points - spentPoints + earnedPoints);
+
+        const accountKey = `${vipState.countryCode}-${vipState.phone}`;
+        if (VIP_ACCOUNTS_DB[accountKey]) {
+          VIP_ACCOUNTS_DB[accountKey].points = vipState.points;
+        }
+        updateVipUI();
+
+        receiptVipRow.classList.remove('hidden');
+        receiptVipRow.classList.add('flex');
+        document.getElementById('receipt-vip-earned').textContent = `${vipState.countryCode} ${vipState.phone} (+${earnedPoints} 積分)`;
+      } else {
+        receiptVipRow.classList.add('hidden');
+        receiptVipRow.classList.remove('flex');
+      }
+
+      const receiptItemsHtml = cart.map(item => {
+        const sub = item.unitPrice * item.qty;
+        const topStr = item.toppings.length > 0 ? ` + ${item.toppings.join('、')}` : '';
+        return `
+          <div class="flex justify-between items-start border-b border-[#ffe0b2] pb-1.5 last:border-none">
+            <div>
+              <div class="font-bold text-[#3d231d]">${item.name} x${item.qty}</div>
+              <div class="text-[11px] text-[#8d6e63]">${item.size}・${item.ice}・${item.sugar}${topStr}</div>
+            </div>
+            <span class="font-bold text-[#e60012]">$${sub.toFixed(2)}</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('receipt-items').innerHTML = receiptItemsHtml;
+      document.getElementById('receipt-total').textContent = `$${pricing.finalTotal.toFixed(2)}`;
+
+      const receiptModal = document.getElementById('receipt-modal');
+      receiptModal.classList.remove('hidden');
+      receiptModal.classList.add('flex');
+    }
+
+    function finishAndResetOrder() {
+      const receiptModal = document.getElementById('receipt-modal');
+      receiptModal.classList.add('hidden');
+      receiptModal.classList.remove('flex');
+      cart = [];
+      const redeemCb = document.getElementById('use-points-checkbox');
+      if (redeemCb) redeemCb.checked = false;
+      renderCart();
+    }
+
+    function scrollToCart() {
+      document.getElementById('shopping-cart-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast-msg');
+      document.getElementById('toast-text').textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    // 頁面載入後初始化菜單與購物車
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMenu();
+      renderCart();
+    });
+  </script>
+</body>
+</html>
